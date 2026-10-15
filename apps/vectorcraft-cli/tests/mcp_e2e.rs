@@ -1,4 +1,4 @@
-//! End-to-end MCP over stdio against the built `vectorcraft-cli mcp --headless` binary.
+//! End-to-end MCP over stdio against the built `illustre-cli mcp --headless` binary.
 // Integration tests: unwrapping and panicking on failure is fine here, unlike in shipped code (AGENTS.md › Robustness).
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
@@ -25,7 +25,7 @@ impl Mcp {
             .stdout(Stdio::piped())
             .stderr(Stdio::null())
             .spawn()
-            .expect("spawn vectorcraft-cli");
+            .expect("spawn illustre-cli");
         let stdin = child.stdin.take();
         let stdout = BufReader::new(child.stdout.take().unwrap());
         Self { child, stdin, stdout, next: 1 }

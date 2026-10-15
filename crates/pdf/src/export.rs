@@ -195,7 +195,7 @@ impl Writer {
         };
 
         let mut pdf = krilla::Document::new_with(settings);
-        let mut meta = Metadata::new().creator("VectorCraft".into()).producer("VectorCraft".into());
+        let mut meta = Metadata::new().creator("Illustre-Angero".into()).producer("Illustre-Angero".into());
         if !title.is_empty() {
             meta = meta.title(title.to_string());
         }

@@ -974,7 +974,7 @@ fn format_label(d: &Document, im: &ImageObject) -> &'static str {
 /// A placed document's `links.list` fields: `format`, `document: true` and its artboard's size
 /// (`pageWidth`, `pageHeight`, pt) instead of pixels.
 fn document_row(p: &PlacedDocument) -> Value {
-    json!({ "format": "VectorCraft", "document": true, "pageWidth": p.width, "pageHeight": p.height })
+    json!({ "format": "Illustre-Angero", "document": true, "pageWidth": p.width, "pageHeight": p.height })
 }
 
 /// Sort rank of a `links.list` status: missing, modified, ok, embedded.

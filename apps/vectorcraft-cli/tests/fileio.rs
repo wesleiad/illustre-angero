@@ -86,7 +86,7 @@ fn help_lists_readable_formats() {
 #[test]
 fn help_lists_perf_deep() {
     let out = ok(&["--help"]);
-    assert!(out.contains("vectorcraft-cli perf [--paths N] [--deep]") && out.contains("--deep also times"), "{out}");
+    assert!(out.contains("illustre-cli perf [--paths N] [--deep]") && out.contains("--deep also times"), "{out}");
 }
 
 /// `info` reports the import warnings: an EPS read only up to an error names it.

@@ -13,12 +13,12 @@ fn main() -> Result<(), String> {
     }
     let mut res = winresource::WindowsResource::new();
     res.set_icon("../../assets/app-icon/vectorcraft.ico")
-        .set("ProductName", "VectorCraft")
-        .set("FileDescription", "VectorCraft vector illustration editor")
-        .set("CompanyName", "Learning Machines LLC")
-        .set("LegalCopyright", "Copyright (c) the VectorCraft authors. MIT OR Apache-2.0.")
-        .set("OriginalFilename", "vectorcraft.exe")
-        .set("InternalName", "vectorcraft");
+        .set("ProductName", "Illustre - Angerô")
+        .set("FileDescription", "Illustre - Angerô")
+        .set("CompanyName", "Grupo Angerô")
+        .set("LegalCopyright", "Grupo Angerô. MIT OR Apache-2.0 (ver NOTICE).")
+        .set("OriginalFilename", "illustre.exe")
+        .set("InternalName", "illustre");
     if let Err(e) = res.compile() {
         if std::env::var_os("VECTORCRAFT_REQUIRE_WINRES").is_some() {
             return Err(format!("embedding Windows resources failed: {e}"));

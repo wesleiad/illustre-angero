@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 publish = false
-default-run = "vectorcraft"
+default-run = "illustre"
 
 [lints]
 workspace = true
@@ -84,3 +84,7 @@ winresource = "0.1"
 [dev-dependencies]
 # Bound socket buffers in real loopback transport deadline regressions.
 socket2 = { workspace = true }
+
+[[bin]]
+name = "illustre"
+path = "src/main.rs"

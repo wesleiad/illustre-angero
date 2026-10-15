@@ -8,7 +8,7 @@ use super::*;
 /// The app's id on getartcraft.com and GitHub.
 pub const APP_ID: &str = "vectorcraft";
 pub const DISCORD_URL: &str = "https://discord.gg/artcraft";
-pub const WEBSITE_URL: &str = "https://getartcraft.com";
+pub const WEBSITE_URL: &str = "https://github.com/wesleiad/Suite-Angero";
 
 /// This app's page on the website.
 pub fn app_page_url() -> String {
@@ -17,7 +17,7 @@ pub fn app_page_url() -> String {
 
 /// This app's source repository.
 pub fn github_url() -> String {
-    format!("https://github.com/storytold/{APP_ID}")
+    "https://github.com/wesleiad/illustre-angero".to_string()
 }
 
 pub fn specs() -> Vec<CommandSpec> {
@@ -44,8 +44,8 @@ mod tests {
     fn links() {
         let mut s = Session::new();
         assert_eq!(s.execute("help.discord", &json!({})).unwrap()["url"], "https://discord.gg/artcraft");
-        assert_eq!(s.execute("help.appPage", &json!({})).unwrap()["url"], "https://getartcraft.com/apps/vectorcraft");
-        assert_eq!(s.execute("help.github", &json!({})).unwrap()["url"], "https://github.com/storytold/vectorcraft");
-        assert_eq!(s.execute("help.links", &json!({})).unwrap()["website"], "https://getartcraft.com");
+        assert_eq!(s.execute("help.appPage", &json!({})).unwrap()["url"], "https://github.com/wesleiad/Suite-Angero/blob/main/docs/ajuda/illustre.md");
+        assert_eq!(s.execute("help.github", &json!({})).unwrap()["url"], "https://github.com/wesleiad/illustre-angero");
+        assert_eq!(s.execute("help.links", &json!({})).unwrap()["website"], "https://github.com/wesleiad/Suite-Angero");
     }
 }

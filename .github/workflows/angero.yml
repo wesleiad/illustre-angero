@@ -1,0 +1,85 @@
+# Compila e publica uma versão nova a cada push no ramo "angero".
+# Gerado a partir de Suite-Angero/instalador/workflow-programa.yml (preencher_workflows.py).
+name: Versão Angerô
+
+on:
+  push:
+    branches: [angero]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: versao-angero
+  cancel-in-progress: false
+
+env:
+  PACOTE: "vectorcraft"
+  EXE: "illustre"
+  ID: "illustre"
+  NOME: "Illustre - Angerô"
+  ICONE: "vetor"
+  ARGS: '--control 7979'
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: storytold/craft-fonts
+          ref: 3d9ab3a132ed0eff457e424226a435a901da30d3
+          path: _fontes
+      - uses: actions/checkout@v4
+        with:
+          repository: wesleiad/Suite-Angero
+          path: _suite
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Versão
+        id: v
+        shell: pwsh
+        run: |
+          $base = (Select-String -Path Cargo.toml -Pattern '^version\s*=\s*"([^"]+)"' | Select-Object -First 1).Matches[0].Groups[1].Value
+          $versao = "$base.${{ github.run_number }}"
+          "versao=$versao" >> $env:GITHUB_OUTPUT
+          Write-Output "Versão $versao"
+
+      - name: Compilar
+        shell: pwsh
+        env:
+          CRAFT_FONTS_DIR: ${{ github.workspace }}/_fontes
+        run: cargo build --release --locked -p $env:PACOTE -p "$($env:PACOTE)-cli"
+
+      - name: Empacotar
+        shell: pwsh
+        run: |
+          $pasta = "dist/$env:EXE"
+          New-Item -ItemType Directory -Force $pasta | Out-Null
+          Copy-Item "target/release/$env:EXE.exe", "target/release/$env:EXE-cli.exe" $pasta
+          Copy-Item LICENSE-APACHE, LICENSE-MIT, NOTICE $pasta
+          Set-Content -Path "$pasta/versao.txt" -Value "${{ steps.v.outputs.versao }}" -NoNewline -Encoding ascii
+          Compress-Archive -Path "$pasta/*" -DestinationPath "dist/$env:EXE-windows-x64.zip" -Force
+          Set-Content -Path "dist/versao.txt" -Value "${{ steps.v.outputs.versao }}" -NoNewline -Encoding ascii
+
+      - name: Instalador
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress | Out-Null }
+          & $iscc "/DId=$env:ID" "/DNome=$env:NOME" "/DExe=$env:EXE" "/DIcone=$env:ICONE" "/DArgs=$env:ARGS" `
+            "/DVersao=${{ steps.v.outputs.versao }}" "/DFonte=$PWD\dist\$env:EXE" "/DIcones=$PWD\_suite\icones\ico" `
+            "/DSaida=$PWD\dist" _suite\instalador\programa.iss
+          if ($LASTEXITCODE -ne 0) { throw "ISCC falhou" }
+
+      - name: Publicar
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $v = "${{ steps.v.outputs.versao }}"
+          gh release create "v$v" "dist/$env:EXE-windows-x64.zip" "dist/versao.txt" (Get-ChildItem dist/*.exe).FullName `
+            --title "$env:NOME $v" --notes "Versão compilada automaticamente a partir do commit ${{ github.sha }}." --latest
