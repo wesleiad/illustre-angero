@@ -111,3 +111,10 @@ opt-level = 1
 [profile.release]
 lto = "thin"
 codegen-units = 1
+
+# Angerô: o winit corrigido do PDF - Angerô (vendor/winit; ver o vendor/README.md do pdf-angero): a
+# janela arrastada entre monitores de escalas diferentes crescia e ficava na escala errada (#324).
+[patch.crates-io]
+winit = { path = "vendor/winit" }
+# Angerô: o egui-wgpu corrigido do PDF - Angerô: janela restaurada em outro monitor/escala não fecha mais (#577).
+egui-wgpu = { path = "vendor/egui-wgpu" }

@@ -91,6 +91,40 @@ pub fn app_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
                 ui.add_space(10.0);
                 crate::community::discord_button(app, ui, false);
             }
+            // Angerô: cor do tema (destaque) escolhida pelo usuário.
+            ui.add_space(6.0);
+            let resp = widgets::icon_button(ui, "palette", tl!("Theme color"), false, icon);
+            egui::Popup::menu(&resp).close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside).show(|ui| {
+                ui.label(egui::RichText::new(tl!("Theme color")).strong());
+                let atual = theme::custom_accent().unwrap_or(Tokens::for_brightness(app.ui.brightness).accent);
+                let mut rgb = [atual.r(), atual.g(), atual.b()];
+                if ui.color_edit_button_srgb(&mut rgb).changed() {
+                    app.ui.accent_color = Some(rgb);
+                }
+                if ui.add_enabled(app.ui.accent_color.is_some(), egui::Button::new(tl!("Angerô default colors"))).clicked() {
+                    app.ui.accent_color = None;
+                    ui.close();
+                }
+            });
+            // Angerô: Exportar e Imprimir em destaque, com ícone e texto (só se couberem).
+            if ui.available_width() >= 230.0 {
+                ui.add_space(8.0);
+                let tip = menus::shortcut_of("file.exportAs")
+                    .map_or_else(|| tl!("Export As…").to_string(), |sc| format!("{}  ({})", tl!("Export As…"), menus::pretty_shortcut(sc)));
+                if highlighted_button(ui, "share-2", tl!("Export"), egui::Color32::from_rgb(0x7c, 0x3a, 0xed), &tip, menus::enabled(app, "file.exportAs"))
+                    .clicked()
+                {
+                    app.run("file.exportAs", json!({})).ok();
+                }
+                ui.add_space(4.0);
+                let tip = menus::shortcut_of("file.print")
+                    .map_or_else(|| tl!("Print…").to_string(), |sc| format!("{}  ({})", tl!("Print…"), menus::pretty_shortcut(sc)));
+                if highlighted_button(ui, "printer", tl!("Print"), egui::Color32::from_rgb(0x0e, 0x9f, 0x6e), &tip, menus::enabled(app, "file.print"))
+                    .clicked()
+                {
+                    app.run("file.print", json!({})).ok();
+                }
+            }
             if app.services.native_menu.is_some() {
                 let title = ui.painter().layout_no_wrap("Illustre - Angerô".into(), egui::FontId::proportional(13.5), t.text);
                 let title_rect = egui::Rect::from_center_size(full.center(), title.size());
@@ -104,6 +138,31 @@ pub fn app_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
     if custom {
         titlebar::caption_buttons(app, ui, bar.response.rect);
     }
+}
+
+/// Angerô: botão cheio, colorido, com ícone e texto (Imprimir, Exportar), para não passar despercebido.
+fn highlighted_button(ui: &mut Ui, icon: &str, label: &str, fill: egui::Color32, tip: &str, enabled: bool) -> egui::Response {
+    let font = egui::FontId::proportional(12.5);
+    let galley = ui.painter().layout_no_wrap(label.to_string(), font, egui::Color32::WHITE);
+    let size = vec2(10.0 + 16.0 + 6.0 + galley.size().x + 12.0, WIDGET_H.max(26.0));
+    let sense = if enabled { Sense::click() } else { Sense::hover() };
+    let (rect, resp) = ui.allocate_exact_size(size, sense);
+    let fill = if !enabled {
+        fill.gamma_multiply(0.4)
+    } else if resp.is_pointer_button_down_on() {
+        fill.gamma_multiply(0.8)
+    } else if resp.hovered() {
+        fill.gamma_multiply(0.9)
+    } else {
+        fill
+    };
+    ui.painter().rect_filled(rect, CornerRadius::same(6), fill);
+    let icon_rect = egui::Rect::from_center_size(egui::pos2(rect.left() + 10.0 + 8.0, rect.center().y), vec2(16.0, 16.0));
+    icons::paint(ui, icon, icon_rect, egui::Color32::WHITE);
+    ui.painter().galley(egui::pos2(icon_rect.right() + 6.0, rect.center().y - galley.size().y / 2.0), galley, egui::Color32::WHITE);
+    let info = label.to_string();
+    resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, enabled, info.clone()));
+    if enabled { resp.on_hover_cursor(egui::CursorIcon::PointingHand).on_hover_text(tip) } else { resp.on_hover_text(tip) }
 }
 
 /// Whether the window shows the system's title bar instead of the app drawing its own: Windows

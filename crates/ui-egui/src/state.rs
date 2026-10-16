@@ -242,6 +242,11 @@ impl Dialog {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(default)]
 pub struct UiState {
+    /// Angerô: 2 depois de conferido o tema de fábrica (as cores do Illustrator); 1 = uma versão de
+    /// teste trocou para o tema claro, o que é desfeito uma vez.
+    pub angero_tema: u32,
+    /// Angerô: cor de destaque escolhida pelo usuário (`None`: a da identidade).
+    pub accent_color: Option<[u8; 3]>,
     /// The interface language older versions saved here (`ja`, `cs`…). It now lives in the
     /// `interfaceLanguage` preference, which [`crate::prefs_dialog::restore`] carries it over to;
     /// it is never written back.
@@ -663,6 +668,8 @@ impl UiState {
 impl Default for UiState {
     fn default() -> Self {
         Self {
+            angero_tema: 0,
+            accent_color: None,
             legacy_language: None,
             brightness: Brightness::MediumDark,
             dock_tab: DockTab::Properties,

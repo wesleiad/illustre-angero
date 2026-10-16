@@ -251,10 +251,14 @@ pub fn mono(size: f32) -> FontId {
 pub fn install_fonts(ctx: &egui::Context) {
     let mut fonts = FontDefinitions::default();
     let add = |f: &mut FontDefinitions, name: &str, bytes: &'static [u8]| {
-        f.font_data.insert(name.to_owned(), Arc::new(FontData::from_static(bytes)));
+        // Angerô: a Montserrat (apelidos SourceSans3*) entra a 94% para caber como a fonte anterior.
+        let data = FontData::from_static(bytes);
+        let data = if name.starts_with("SourceSans3") { data.tweak(egui::epaint::text::FontTweak { scale: 0.94, ..Default::default() }) } else { data };
+        f.font_data.insert(name.to_owned(), Arc::new(data));
     };
-    add(&mut fonts, "SourceSans3", include_bytes!("../../../assets/fonts/SourceSans3-Regular.ttf"));
-    add(&mut fonts, "SourceSans3-Semibold", include_bytes!("../../../assets/fonts/SourceSans3-Semibold.ttf"));
+    // Angerô: interface em Montserrat (identidade Lua Nova); os apelidos "SourceSans3*" ficam.
+    add(&mut fonts, "SourceSans3", include_bytes!("../../../assets/fonts/Montserrat-Regular.ttf"));
+    add(&mut fonts, "SourceSans3-Semibold", include_bytes!("../../../assets/fonts/Montserrat-SemiBold.ttf"));
     add(&mut fonts, "JetBrainsMono", include_bytes!("../../../assets/fonts/JetBrainsMono-Regular.ttf"));
     let fallback: Vec<String> = fonts.families.get(&FontFamily::Proportional).cloned().unwrap_or_default();
     let mut prop = vec!["SourceSans3".to_string()];
@@ -269,6 +273,14 @@ pub fn install_fonts(ctx: &egui::Context) {
     let mut mono = vec!["JetBrainsMono".to_string()];
     mono.extend(fallback);
     fonts.families.insert(FontFamily::Name(FONT_MONO.into()), mono);
+    // Angerô: a Montserrat não tem alguns símbolos (setas, ▸, ✓…) que a fonte anterior tinha; ela
+    // fica logo depois, de reserva, em toda pilha que começa pela Montserrat.
+    fonts.font_data.insert("AngeroReserva".into(), Arc::new(FontData::from_static(include_bytes!("../../../assets/fonts/SourceSans3-Regular.ttf"))));
+    for stack in fonts.families.values_mut() {
+        if let Some(i) = stack.iter().position(|n| n.starts_with("SourceSans3")) {
+            stack.insert(i + 1, "AngeroReserva".into());
+        }
+    }
     add_craft_fonts(&mut fonts);
     ctx.set_fonts(fonts);
 }
@@ -292,8 +304,30 @@ fn add_craft_fonts(fonts: &mut FontDefinitions) {
 }
 
 /// Apply tokens to egui's global style.
+static CUSTOM_ACCENT: std::sync::Mutex<Option<[u8; 3]>> = std::sync::Mutex::new(None);
+
+/// Angerô: a cor de destaque escolhida pelo usuário (`None`: a da identidade Lua Nova).
+pub fn custom_accent() -> Option<Color32> {
+    CUSTOM_ACCENT.lock().ok().and_then(|c| *c).map(|[r, g, b]| Color32::from_rgb(r, g, b))
+}
+
+/// Angerô: muda a cor de destaque (vale no próximo `apply`).
+pub fn set_custom_accent(color: Option<[u8; 3]>) {
+    if let Ok(mut c) = CUSTOM_ACCENT.lock() {
+        *c = color;
+    }
+}
+
 pub fn apply(ctx: &egui::Context, b: Brightness) {
-    let t = Tokens::for_brightness(b);
+    let mut t = Tokens::for_brightness(b);
+    if let Some(c) = custom_accent() {
+        t.accent = c;
+        t.accent_strong = c.gamma_multiply(0.85);
+        t.flyout_active = c;
+        if !t.dark {
+            t.icon = c;
+        }
+    }
     ctx.data_mut(|d| d.insert_temp(egui::Id::NULL, t));
     let mut v = if t.dark { Visuals::dark() } else { Visuals::light() };
     v.panel_fill = t.panel;

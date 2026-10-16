@@ -52,6 +52,11 @@ mod platform {
     /// Removes `WS_CAPTION` (which includes `WS_BORDER`) and has Windows recalculate the frame;
     /// the sizing border stays, so edge resizing and snapping keep working.
     fn strip(hwnd: &HWND) {
+        // Angerô: maximizada, a janela fica com os estilos que o winit deu: sem WS_CAPTION o Windows
+        // trata a janela maximizada como tela cheia e ela cobre a barra de tarefas.
+        if hwnd.IsZoomed() {
+            return;
+        }
         let style = hwnd.style();
         let without = style & !(co::WS::CAPTION | co::WS::BORDER);
         if without.raw() == style.raw() {

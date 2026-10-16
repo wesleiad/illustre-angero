@@ -75,12 +75,22 @@ pub fn restore(app: &mut VectorcraftApp) {
     if !GPU_PREFERENCES.iter().any(|(v, _)| *v == p.gpu_preference) {
         p.gpu_preference = Prefs::default().gpu_preference;
     }
+    // Angerô: o Illustre mantém as cores do Illustrator (Médio-escuro); uma versão de teste trocou
+    // para o tema claro (marca 1), o que é desfeito uma vez.
+    if app.ui.angero_tema == 1 {
+        p.ui_brightness = Brightness::MediumDark.id().into();
+        app.ui.brightness = Brightness::MediumDark;
+    }
+    app.ui.angero_tema = 2;
+    theme::set_custom_accent(app.ui.accent_color);
     app.session.apply_prefs(p);
 }
 
 #[derive(Clone, Copy, PartialEq)]
 struct Applied {
     brightness: Brightness,
+    /// Angerô: a cor de destaque escolhida (o tema é reaplicado quando ela muda).
+    accent: Option<[u8; 3]>,
     /// User Interface › Canvas Color, unless it matches the interface brightness.
     canvas: Option<egui::Color32>,
     threads: i32,
@@ -111,6 +121,7 @@ pub fn apply_runtime(app: &mut VectorcraftApp, ctx: &egui::Context) {
     }
     let want = Applied {
         brightness: app.ui.brightness,
+        accent: app.ui.accent_color,
         canvas: canvas_color(&p.canvas_color),
         threads: p.render_threads,
         tool_tips: p.show_tool_tips,
@@ -120,6 +131,7 @@ pub fn apply_runtime(app: &mut VectorcraftApp, ctx: &egui::Context) {
     let id = egui::Id::new("dc-applied-prefs");
     let prev: Option<Applied> = ctx.data(|d| d.get_temp::<Option<Applied>>(id)).flatten();
     if prev != Some(want) {
+        theme::set_custom_accent(want.accent);
         theme::apply(ctx, want.brightness);
         // General › Show Tool Tips: off, no button or field shows its tool tip (they never come
         // due), whichever widget asks for one.

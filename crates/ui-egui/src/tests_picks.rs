@@ -194,6 +194,27 @@ fn save_as_goes_on_with_the_path_picked() {
     assert_eq!(*written.borrow(), ["/art/poster.svg"]);
 }
 
+/// Angerô: um documento novo sugere .ai ao salvar (o nome e o primeiro tipo da janela); depois
+/// de salvo assim, continua .ai.
+#[test]
+fn a_new_document_saves_as_ai_by_default() {
+    let (mut app, shown, written) = app();
+    app.run("file.new", json!({"width": 100, "height": 80})).unwrap();
+    app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 30, "height": 20})).unwrap();
+    assert!(app.run("file.save", json!({})).is_err());
+    let requests = shown.requests();
+    let [PickRequest::Save(pick)] = requests.as_slice() else { panic!("a save dialog: {requests:?}") };
+    assert!(pick.name.ends_with(".ai"), "{}", pick.name);
+    assert!(pick.filters.first().is_some_and(|(_, exts)| exts.contains(&"ai")), "{:?}", pick.filters);
+    shown.answer(&["/art/molde.ai"]);
+    poll(&mut app);
+    if dialog_kind(&app).is_some() {
+        crate::dialogs::confirm(&mut app).unwrap();
+    }
+    assert_eq!(*written.borrow(), ["/art/molde.ai"]);
+    assert_eq!(app.session.doc().unwrap().format, "ai");
+}
+
 #[test]
 fn a_dialogs_folder_button_fills_its_field_when_the_picker_answers() {
     let (mut app, shown, _) = app();

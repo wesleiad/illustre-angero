@@ -366,6 +366,17 @@ fn write_encoded(write: Writer, doc: &vectorcraft_doc::Document, path: &str, enc
 }
 
 fn plan(app: &VectorcraftApp, mode: SaveMode, p: &Value) -> Result<SavePlan, String> {
+    // Angerô: um documento novo (nunca salvo, ainda no formato nativo) salva em .ai por padrão;
+    // o formato escolhido na janela de salvar (ou um caminho com extensão) continua valendo.
+    let new_doc = app.session.doc().is_ok_and(|d| d.path.is_none() && d.format == "vectorcraft");
+    let unspecified = p.get("format").is_none() && p.get("path").is_none();
+    if new_doc && unspecified && !matches!(mode, SaveMode::Template) {
+        let mut with_ai = if p.is_object() { p.clone() } else { serde_json::json!({}) };
+        if let Some(o) = with_ai.as_object_mut() {
+            o.insert("format".into(), serde_json::json!("ai"));
+        }
+        return fileio::save_plan(&app.session, mode, &with_ai).map_err(|e| e.to_string());
+    }
     fileio::save_plan(&app.session, mode, p).map_err(|e| e.to_string())
 }
 
