@@ -22,7 +22,8 @@ use windows_sys::Win32::Foundation::{
 };
 use windows_sys::Win32::Graphics::Gdi::{
     GetMonitorInfoW, MonitorFromRect, MonitorFromWindow, RedrawWindow, ScreenToClient,
-    ValidateRect, MONITORINFO, MONITOR_DEFAULTTONULL, RDW_INTERNALPAINT, SC_SCREENSAVE,
+    ValidateRect, MONITORINFO, MONITOR_DEFAULTTONEAREST, MONITOR_DEFAULTTONULL, RDW_INTERNALPAINT,
+    SC_SCREENSAVE,
 };
 use windows_sys::Win32::System::Ole::RevokeDragDrop;
 use windows_sys::Win32::System::Threading::{
@@ -2205,6 +2206,25 @@ unsafe fn public_window_callback_inner(
                     let (width, height): (u32, u32) =
                         window_flags.adjust_size(window, max_size).into();
                     unsafe { (*mmi).ptMaxTrackSize = POINT { x: width as i32, y: height as i32 } };
+                }
+            }
+
+            // Angerô: a janela sem moldura do sistema (sem WS_CAPTION) maximizada pelo Windows
+            // (Win+↑, arrastar até o topo, maximizar pela barra de tarefas) ocupava o monitor
+            // inteiro e cobria a barra de tarefas com uma faixa preta. Maximizada, ela fica só na
+            // área útil do monitor em que está.
+            if !window_flags.contains(WindowFlags::MARKER_DECORATIONS)
+                && window_state.fullscreen.is_none()
+            {
+                let monitor = unsafe { MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST) };
+                if let Ok(info) = monitor::get_monitor_info(monitor) {
+                    let (work, area) = (info.monitorInfo.rcWork, info.monitorInfo.rcMonitor);
+                    unsafe {
+                        (*mmi).ptMaxPosition =
+                            POINT { x: work.left - area.left, y: work.top - area.top };
+                        (*mmi).ptMaxSize =
+                            POINT { x: work.right - work.left, y: work.bottom - work.top };
+                    }
                 }
             }
 
