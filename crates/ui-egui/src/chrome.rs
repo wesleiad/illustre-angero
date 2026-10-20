@@ -69,13 +69,16 @@ pub fn app_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
             let mut rui = ui.new_child(egui::UiBuilder::new().max_rect(right).layout(egui::Layout::right_to_left(egui::Align::Center)));
             let ui = &mut rui;
             // Workspace switcher: shows the current workspace, opens Window → Workspace.
-            let (wr, wresp) = ui.allocate_exact_size(vec2(ws_w, WIDGET_H), Sense::click());
-            ui.painter().rect_filled(wr, CornerRadius::same(4), if wresp.hovered() { t.hover } else { t.panel });
-            ui.painter().with_clip_rect(wr.shrink2(vec2(4.0, 0.0))).galley(wr.left_center() + vec2(10.0, -ws.size().y / 2.0), ws, t.text);
-            icons::paint(ui, "chevron-down", egui::Rect::from_center_size(wr.right_center() - vec2(12.0, 0.0), vec2(12.0, 12.0)), t.text_dim);
-            let wresp = wresp.on_hover_text(tl!("Switch workspace"));
-            egui::Popup::menu(&wresp).show(|ui| crate::workspaces::popup(app, ui));
-            ui.add_space(8.0);
+            // Angerô: some quando nem o mínimo cabe (senão cobre os menus).
+            if room >= 64.0 {
+                let (wr, wresp) = ui.allocate_exact_size(vec2(ws_w, WIDGET_H), Sense::click());
+                ui.painter().rect_filled(wr, CornerRadius::same(4), if wresp.hovered() { t.hover } else { t.panel });
+                ui.painter().with_clip_rect(wr.shrink2(vec2(4.0, 0.0))).galley(wr.left_center() + vec2(10.0, -ws.size().y / 2.0), ws, t.text);
+                icons::paint(ui, "chevron-down", egui::Rect::from_center_size(wr.right_center() - vec2(12.0, 0.0), vec2(12.0, 12.0)), t.text_dim);
+                let wresp = wresp.on_hover_text(tl!("Switch workspace"));
+                egui::Popup::menu(&wresp).show(|ui| crate::workspaces::popup(app, ui));
+                ui.add_space(8.0);
+            }
             // Search → command palette (its shortcut opens it too).
             if search {
                 let tip = match menus::shortcut_of("help.commandPalette") {
@@ -91,28 +94,37 @@ pub fn app_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
                 ui.add_space(10.0);
                 crate::community::discord_button(app, ui, false);
             }
-            // Angerô: cor do tema (destaque) escolhida pelo usuário.
-            ui.add_space(6.0);
-            let resp = widgets::icon_button(ui, "palette", tl!("Theme color"), false, icon);
-            egui::Popup::menu(&resp).close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside).show(|ui| {
-                ui.label(egui::RichText::new(tl!("Theme color")).strong());
-                let atual = theme::custom_accent().unwrap_or(Tokens::for_brightness(app.ui.brightness).accent);
-                let mut rgb = [atual.r(), atual.g(), atual.b()];
-                if ui.color_edit_button_srgb(&mut rgb).changed() {
-                    app.ui.accent_color = Some(rgb);
-                }
-                if ui.add_enabled(app.ui.accent_color.is_some(), egui::Button::new(tl!("Angerô default colors"))).clicked() {
-                    app.ui.accent_color = None;
-                    ui.close();
-                }
-            });
+            // Angerô: cor do tema (destaque) escolhida pelo usuário (só se couber).
+            if ui.available_width() >= icon + 6.0 {
+                ui.add_space(6.0);
+                let resp = widgets::icon_button(ui, "palette", tl!("Theme color"), false, icon);
+                egui::Popup::menu(&resp).close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside).show(|ui| {
+                    ui.label(egui::RichText::new(tl!("Theme color")).strong());
+                    let atual = theme::custom_accent().unwrap_or(Tokens::for_brightness(app.ui.brightness).accent);
+                    let mut rgb = [atual.r(), atual.g(), atual.b()];
+                    if ui.color_edit_button_srgb(&mut rgb).changed() {
+                        app.ui.accent_color = Some(rgb);
+                    }
+                    if ui.add_enabled(app.ui.accent_color.is_some(), egui::Button::new(tl!("Angerô default colors"))).clicked() {
+                        app.ui.accent_color = None;
+                        ui.close();
+                    }
+                });
+            }
             // Angerô: Exportar e Imprimir em destaque, com ícone e texto (só se couberem).
             if ui.available_width() >= 230.0 {
                 ui.add_space(8.0);
                 let tip = menus::shortcut_of("file.exportAs")
                     .map_or_else(|| tl!("Export As…").to_string(), |sc| format!("{}  ({})", tl!("Export As…"), menus::pretty_shortcut(sc)));
-                if highlighted_button(ui, "share-2", tl!("Export"), egui::Color32::from_rgb(0x7c, 0x3a, 0xed), &tip, menus::enabled(app, "file.exportAs"))
-                    .clicked()
+                if highlighted_button(
+                    ui,
+                    "share-2",
+                    tl!("Export"),
+                    egui::Color32::from_rgb(0x7c, 0x3a, 0xed),
+                    &tip,
+                    menus::enabled(app, "file.exportAs"),
+                )
+                .clicked()
                 {
                     app.run("file.exportAs", json!({})).ok();
                 }
@@ -124,6 +136,15 @@ pub fn app_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
                 {
                     app.run("file.print", json!({})).ok();
                 }
+            }
+            // Angerô: Extensões da Suíte (com texto se couber, senão só o ícone; some sem espaço).
+            let room = ui.available_width();
+            if room >= crate::extensoes::largura(ui) + 8.0 {
+                ui.add_space(4.0);
+                crate::extensoes::botao(ui, true);
+            } else if room >= 28.0 + 8.0 {
+                ui.add_space(4.0);
+                crate::extensoes::botao(ui, false);
             }
             if app.services.native_menu.is_some() {
                 let title = ui.painter().layout_no_wrap("Illustre - Angerô".into(), egui::FontId::proportional(13.5), t.text);

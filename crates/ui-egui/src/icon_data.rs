@@ -225,6 +225,7 @@ pub static ICONS: &[(&str, &[u8])] = &[
     ("pipette", include_bytes!("../../../assets/icons/pipette.svg")),
     ("plus", include_bytes!("../../../assets/icons/plus.svg")),
     ("printer", include_bytes!("../../../assets/icons/printer.svg")),
+    ("puzzle", include_bytes!("../../../assets/icons/puzzle.svg")),
     ("redo-2", include_bytes!("../../../assets/icons/redo-2.svg")),
     ("rotate-3d", include_bytes!("../../../assets/icons/rotate-3d.svg")),
     ("rotate-ccw", include_bytes!("../../../assets/icons/rotate-ccw.svg")),
