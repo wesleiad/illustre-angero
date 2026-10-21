@@ -111,10 +111,11 @@ fn new_documents_start_in_the_general_preference() {
     app.run("file.newDialog", json!({})).unwrap();
     assert_eq!(app.ui.dialog.as_ref().unwrap().fields["units"], json!("Millimeters"));
     let t = dialog_texts(&mut app);
-    assert!(shows(&t, &Unit::Millimeters.format(612.0)), "Letter in mm: {t:?}");
+    let a4 = 210.0 * 72.0 / 25.4;
+    assert!(shows(&t, &Unit::Millimeters.format(a4)), "A4 in mm: {t:?}");
     crate::dialogs::confirm(&mut app).unwrap();
     let d = &app.session.active().unwrap().doc;
-    assert_eq!((d.units, d.artboards[0].rect.width()), (Unit::Millimeters, 612.0));
+    assert_eq!((d.units, d.artboards[0].rect.width()), (Unit::Millimeters, a4));
 }
 
 #[test]

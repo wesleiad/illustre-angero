@@ -32,7 +32,7 @@ choice! {
         B4 = "b4", "B4";
         B5 = "b5", "B5";
         Custom = "custom", "Custom";
-    } default Letter
+    } default A4 // Angerô: A4 (era Letter)
 }
 
 impl Media {

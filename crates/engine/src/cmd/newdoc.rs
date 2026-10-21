@@ -132,9 +132,10 @@ pub struct DocSettings {
 impl Default for DocSettings {
     fn default() -> Self {
         Self {
-            name: "Letter".into(),
-            width: 612.0,
-            height: 792.0,
+            // Angerô: A4 (no Brasil não se usa Letter)
+            name: "A4".into(),
+            width: 210.0 * 72.0 / 25.4,
+            height: 297.0 * 72.0 / 25.4,
             units: Unit::Points,
             artboards: 1,
             layout: ArtboardLayout::GridByRow,
@@ -431,12 +432,13 @@ pub const CATEGORIES: &[Category] = &[
         ColorMode::Cmyk,
         300.0,
         &[
+            // Angerô: A4 primeiro (é o que New Document abre sem Recentes)
+            ("A4", 210.0, 297.0, MM),
+            ("A3", 297.0, 420.0, MM),
+            ("A5", 148.0, 210.0, MM),
             ("Letter", 612.0, 792.0, PT),
             ("Legal", 612.0, 1008.0, PT),
             ("Tabloid", 792.0, 1224.0, PT),
-            ("A3", 297.0, 420.0, MM),
-            ("A4", 210.0, 297.0, MM),
-            ("A5", 148.0, 210.0, MM),
             ("B4", 250.0, 353.0, MM),
             ("B5", 176.0, 250.0, MM),
         ],
@@ -541,7 +543,7 @@ pub fn find(s: &Session, name: &str) -> Option<DocSettings> {
 }
 
 impl Session {
-    /// New Document's starting settings: Letter in Preferences ▸ Units ▸ General.
+    /// New Document's starting settings: A4 in Preferences ▸ Units ▸ General.
     fn default_settings(&self) -> DocSettings {
         DocSettings { units: self.default_units(), ..DocSettings::default() }
     }

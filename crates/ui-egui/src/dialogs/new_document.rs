@@ -65,7 +65,7 @@ const DETAILS: f32 = 292.0;
 /// Height of the dialog's content.
 const HEIGHT: f32 = 600.0;
 
-/// Open New Document on the most recent settings (or Letter), named after the next untitled
+/// Open New Document on the most recent settings (or A4), named after the next untitled
 /// document.
 pub fn open(app: &mut VectorcraftApp) {
     let category = if app.session.prefs.recent_new_docs.is_empty() { "Print" } else { "Recent" };
@@ -667,7 +667,7 @@ mod tests {
         let mut app = VectorcraftApp::new(Session::new(), Default::default());
         app.run("file.newDialog", json!({})).unwrap();
         frame(&mut app);
-        assert_eq!((field(&app, "category"), field(&app, "preset"), field(&app, "name")), (json!("Print"), json!("Letter"), json!("Untitled-1")));
+        assert_eq!((field(&app, "category"), field(&app, "preset"), field(&app, "name")), (json!("Print"), json!("A4"), json!("Untitled-1")));
         // Choosing a preset (as `ui.dialog.set` does) fills the fields.
         set(&mut app, "category", json!("Film & Video"));
         set(&mut app, "preset", json!("4K UHD"));

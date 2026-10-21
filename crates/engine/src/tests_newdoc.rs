@@ -103,7 +103,7 @@ fn a_preset_starts_the_document_and_params_change_it() {
     s.execute("prefs.set", &json!({"key": "unitsGeneral", "value": "millimeters"})).unwrap();
     s.execute("file.new", &json!({"preset": "A4"})).unwrap();
     assert_eq!(s.doc().unwrap().doc.units, Unit::Millimeters);
-    assert_eq!(presets(&mut s, "Print")[4]["size"], "210 × 297 mm");
+    assert_eq!(presets(&mut s, "Print")[0]["size"], "210 × 297 mm"); // Angerô: A4 primeiro
     s.execute("file.new", &json!({"width": 100})).unwrap();
     assert_eq!(s.doc().unwrap().doc.units, Unit::Millimeters);
     s.execute("file.new", &json!({"preset": "HDTV 720p"})).unwrap();
