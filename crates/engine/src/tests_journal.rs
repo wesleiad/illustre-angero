@@ -393,3 +393,14 @@ fn a_failed_preview_is_not_journaled_at_commit() {
     s.commit_interaction().unwrap();
     assert_eq!(s.journal.len(), journal);
 }
+
+#[test]
+fn a_new_document_is_untitled_in_the_interface_language() {
+    let mut s = Session::new();
+    s.execute("file.new", &json!({"created": null})).unwrap();
+    assert_eq!(s.doc().unwrap().doc.title, "Untitled-1");
+    s.ui_language = Some("pt-br".into());
+    assert_eq!(s.peek_untitled(), "Sem título-2");
+    s.execute("file.new", &json!({"created": null})).unwrap();
+    assert_eq!(s.doc().unwrap().doc.title, "Sem título-2");
+}

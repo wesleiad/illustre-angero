@@ -1229,11 +1229,16 @@ impl Session {
     }
     /// The name [`Session::next_untitled`] gives next (New Document's Name field).
     pub fn peek_untitled(&self) -> String {
-        format!("Untitled-{}", self.untitled_counter + 1)
+        format!("{}-{}", self.untitled_name(), self.untitled_counter + 1)
     }
     pub fn next_untitled(&mut self) -> String {
         self.untitled_counter += 1;
-        format!("Untitled-{}", self.untitled_counter)
+        format!("{}-{}", self.untitled_name(), self.untitled_counter)
+    }
+    /// Angerô: "Sem título" while the interface is in Portuguese, else "Untitled".
+    fn untitled_name(&self) -> &'static str {
+        let lang = self.ui_language.as_deref().unwrap_or(&self.prefs.interface_language);
+        if lang.to_ascii_lowercase().starts_with("pt") { "Sem título" } else { "Untitled" }
     }
     /// Text layout bounds are a cache (not saved): compute them for a document just read, or
     /// selection boxes and hit testing would use the rough estimate until each text is edited, and
