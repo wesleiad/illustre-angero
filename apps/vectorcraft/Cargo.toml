@@ -1,5 +1,5 @@
 [package]
-name = "vectorcraft"
+name = "illustre"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -49,6 +49,9 @@ winsafe = { version = "0.0.29", default-features = false, features = ["user"], o
 # Adobe Fonts load in place (#579). MIT OR Apache-2.0, already in the build through accesskit.
 [target.'cfg(all(windows, not(target_vendor = "win7")))'.dependencies]
 windows = { version = "0.62", features = ["Win32_Graphics_DirectWrite"] }
+# Angerô: a aba do Fluxogama (src/painel_web.rs) mostra a página do plugin no WebView2 do Windows.
+# Tauri's webview crate, MIT OR Apache-2.0; its default features are the Linux WebKitGTK ones.
+wry = { version = "=0.57.1", default-features = false }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 # The macOS menu bar (src/mac_menu.rs): Tauri's menu crate, AppKit menus behind a safe API (no GTK

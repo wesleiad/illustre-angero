@@ -30,6 +30,7 @@ mod control_server;
 #[cfg(feature = "wgpu")]
 mod gpu;
 mod logging;
+mod painel_web;
 #[cfg(target_os = "macos")]
 mod mac_fonts;
 #[cfg(target_os = "macos")]
@@ -63,6 +64,8 @@ struct App {
     frames: u64,
     /// Keeps the custom title bar's window borderless (Windows, #1758).
     window_frame: Option<window_frame::WindowFrameFn>,
+    /// Angerô: a página do Fluxogama na aba do painel da direita (WebView2).
+    painel_web: painel_web::PainelWeb,
 }
 
 impl eframe::App for App {
@@ -93,6 +96,7 @@ impl eframe::App for App {
             self.app.titlebar_inset = inset.unwrap_or(mac_window::DEFAULT_INSET);
         }
         file_access::unconfined(|| self.app.ui(ui));
+        self.painel_web.quadro(ui.ctx(), frame);
         // Preferences are written when confirmed, not only at exit: a session ended any other way
         // (the system shutting down, the process ended or crashing) used to lose them (#1747).
         if self.app.take_prefs_changed() {
@@ -872,7 +876,7 @@ fn main() -> std::process::ExitCode {
                 created.ready();
                 // The content and the pointer stay aligned on Windows (#1758).
                 let window_frame = window_frame::service(cc, custom_titlebar);
-                Ok(Box::new(App { app, graphics_loss, graphics_lost: false, frames: 0, window_frame }))
+                Ok(Box::new(App { app, graphics_loss, graphics_lost: false, frames: 0, window_frame, painel_web: Default::default() }))
             }),
         )
     });

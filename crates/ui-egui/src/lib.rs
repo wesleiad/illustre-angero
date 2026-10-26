@@ -24,7 +24,7 @@ pub mod credits;
 pub mod cursors;
 pub mod dialogs;
 pub mod dock;
-mod extensoes;
+pub mod extensoes;
 mod edit_toolbar;
 pub mod find_font;
 pub mod floating;

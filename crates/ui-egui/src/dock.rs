@@ -83,6 +83,17 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
         return;
     }
     let t = Tokens::get(ui.ctx());
+    // Angerô: o menu Extensões pediu a aba do Fluxogama: o painel se expande para mostrá-la.
+    if crate::extensoes::pedido_expandir() {
+        app.ui.dock = true;
+        app.ui.dock_collapsed = false;
+    }
+    // Janela › Camadas (ou outro comando) trocou a aba do painel: a do Fluxogama sai da frente.
+    let anterior = egui::Id::new("angero-dock-tab-anterior");
+    if ui.ctx().data(|d| d.get_temp::<DockTab>(anterior)).is_some_and(|a| a != app.ui.dock_tab) {
+        crate::extensoes::mostrar_aba(false);
+    }
+    ui.ctx().data_mut(|d| d.insert_temp(anterior, app.ui.dock_tab));
     let shown = floating::shown_tab(&app.ui);
     // Main tabbed group, unless it is collapsed to icons or all its panels float.
     let group = shown.filter(|_| !app.ui.dock_collapsed).map(|active| {
@@ -97,6 +108,11 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
                 }
                 if tab_strip(app, ui, active) {
                     // It floats from this frame on.
+                    return;
+                }
+                // Angerô: a página do Fluxogama ocupa a área toda, sem margem
+                if crate::extensoes::aba_ativa() {
+                    crate::extensoes::conteudo_aba(app, ui);
                     return;
                 }
                 egui::Frame::NONE.inner_margin(egui::Margin { left: 12, right: 10, top: 10, bottom: 8 }).show(ui, |ui| match active {
@@ -179,27 +195,46 @@ fn tab_strip(app: &mut VectorcraftApp, ui: &mut Ui, active: DockTab) -> bool {
     // What a drag out of the strip floats: the panels, the one shown, where its tab began.
     let mut tear: Option<(Vec<&'static str>, &'static str, f32)> = None;
     let tabs: Vec<_> = floating::docked_tabs(&app.ui).collect();
-    let names: Vec<_> = tabs
+    let mut names: Vec<_> = tabs
         .iter()
         .map(|tab| {
             let (id, label, _) = tab.info();
             (id, label)
         })
         .collect();
-    let selected = tabs.iter().position(|&tab| tab == active).unwrap_or(0);
+    // Angerô: a aba do Fluxogama (extensão da Suíte) vem por último, depois dos painéis do Illustre.
+    let extensao = crate::extensoes::tem_aba().then_some(names.len());
+    if extensao.is_some() {
+        names.push((crate::extensoes::ABA_ID, crate::extensoes::ABA_NOME));
+    }
+    let selected = match extensao {
+        Some(i) if crate::extensoes::aba_ativa() => i,
+        _ => tabs.iter().position(|&tab| tab == active).unwrap_or(0),
+    };
     let menu = Rect::from_center_size(strip.right_center() - vec2(14.0, 0.0), vec2(16.0, 16.0));
     let area = Rect::from_min_max(strip.min, egui::pos2((menu.left() - 4.0).max(strip.left()), strip.bottom() - 1.0));
     let out = panel_tabs(ui, "docktab", area, &names, selected, theme::semibold(12.5), true);
     for (i, resp) in out.responses {
-        let Some(&tab) = tabs.get(i) else { continue };
+        let Some(&tab) = tabs.get(i) else {
+            if Some(i) == extensao && resp.clicked() {
+                crate::extensoes::mostrar_aba(true);
+            }
+            continue;
+        };
         let id = tab.info().0;
         if resp.clicked() {
             app.ui.dock_tab = tab;
+            crate::extensoes::mostrar_aba(false);
         }
         crate::panel_docking::legacy_tab(app, ui, id, &resp);
     }
-    if let Some(tab) = out.picked.and_then(|i| tabs.get(i)).copied() {
-        app.ui.dock_tab = tab;
+    if let Some(i) = out.picked {
+        if let Some(&tab) = tabs.get(i) {
+            app.ui.dock_tab = tab;
+            crate::extensoes::mostrar_aba(false);
+        } else if Some(i) == extensao {
+            crate::extensoes::mostrar_aba(true);
+        }
     }
     let rest = Rect::from_min_max(egui::pos2(out.right, strip.top()), egui::pos2(menu.left() - 4.0, strip.bottom()));
     if rest.width() > 0.0 {

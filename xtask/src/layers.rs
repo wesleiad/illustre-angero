@@ -63,6 +63,9 @@ pub const TABLE: &[(&str, Class)] = &[
     ("plugins", Class::Layer(2)),
     ("affinity", Class::Standalone),
     ("scriptcheck", Class::Standalone),
+    // Angerô: os pacotes dos aplicativos se chamam illustre / illustre-cli.
+    ("illustre", Class::Exempt),
+    ("illustre-cli", Class::Exempt),
 ];
 
 /// Explicit orderings *within* a layer (earlier may be used by later).

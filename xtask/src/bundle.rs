@@ -7,7 +7,7 @@ use std::process::Command;
 pub fn run(root: &Path) -> Result<(), String> {
     let status = Command::new(std::env::var("CARGO").unwrap_or_else(|_| "cargo".into()))
         .current_dir(root)
-        .args(["build", "--release", "-p", "vectorcraft", "-p", "vectorcraft-cli"])
+        .args(["build", "--release", "-p", "illustre", "-p", "illustre-cli"])
         .status()
         .map_err(|e| e.to_string())?;
     if !status.success() {

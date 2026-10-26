@@ -4,11 +4,16 @@
 //! lista vem do próprio `extensoes.py --listar` da Suíte e abrir uma extensão é um pedido ao
 //! iniciador (porta 8790), que é ligado sem janela se ainda não estiver rodando. Sem a Suíte
 //! instalada o botão não aparece.
+//!
+//! O Fluxogama também é uma aba do painel da direita, ao lado de Propriedades, Camadas e
+//! Bibliotecas: aqui fica onde ela aparece ([`painel_web`]); quem desenha a página é o programa
+//! (apps/vectorcraft, `painel_web.rs`), com o WebView2 do Windows por cima desse retângulo.
 
 use std::io::{Read, Write};
 use std::net::{SocketAddr, TcpStream};
 use std::path::PathBuf;
 use std::process::Command;
+use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Duration;
 
@@ -17,6 +22,12 @@ use egui::{CornerRadius, Sense, Ui, vec2};
 use crate::icons;
 
 const PORTA_SUITE: u16 = 8790;
+/// Servidor do plugin do Fluxogama na Suíte (`suite/fluxogama.py`).
+const PORTA_FXG: u16 = 8792;
+const ID_FLUXOGAMA: &str = "br.com.fluxogama";
+/// Id e nome da aba no painel da direita.
+pub const ABA_ID: &str = "fluxogama";
+pub const ABA_NOME: &str = "Fluxogama";
 
 #[derive(Clone)]
 struct Extensao {
@@ -113,24 +124,111 @@ fn pedir_extensao(id: &str) -> bool {
     true
 }
 
-/// Abre a extensão; liga o iniciador da Suíte (sem janela) se preciso.
+/// Abre a extensão numa janela própria; liga o iniciador da Suíte (sem janela) se preciso.
 fn abrir(id: String) {
-    let Some(suite) = pasta_suite() else { return };
     std::thread::spawn(move || {
-        if pedir_extensao(&id) {
-            return;
-        }
-        let vbs = suite.join("suite").join("iniciar_suite.vbs");
-        if sem_janela(Command::new("wscript.exe").arg(&vbs).arg("--sem-janela")).spawn().is_err() {
-            return;
-        }
-        for _ in 0..40 {
-            std::thread::sleep(Duration::from_millis(250));
-            if pedir_extensao(&id) {
-                return;
-            }
-        }
+        let _ = pedir_extensao(&id) || ligar_suite(|| pedir_extensao(&id));
     });
+}
+
+/// Liga o iniciador da Suíte sem janela e espera até `pronto()` (uns 10 s no máximo).
+fn ligar_suite(pronto: impl Fn() -> bool) -> bool {
+    let Some(suite) = pasta_suite() else { return false };
+    let vbs = suite.join("suite").join("iniciar_suite.vbs");
+    if sem_janela(Command::new("wscript.exe").arg(&vbs).arg("--sem-janela")).spawn().is_err() {
+        return false;
+    }
+    for _ in 0..40 {
+        std::thread::sleep(Duration::from_millis(250));
+        if pronto() {
+            return true;
+        }
+    }
+    false
+}
+
+// ---------------------------------------------------------------- aba do Fluxogama no painel
+
+/// A aba aparece quando a Suíte tem o plugin do Fluxogama instalado.
+pub fn tem_aba() -> bool {
+    static T: OnceLock<bool> = OnceLock::new();
+    *T.get_or_init(|| pasta_suite().is_some_and(|s| s.join("plugins").join("fluxogama").join("index.html").is_file()))
+}
+
+/// A aba do Fluxogama é a que está à mostra no painel (em vez de Propriedades/Camadas/Bibliotecas).
+static ABA_ATIVA: AtomicBool = AtomicBool::new(false);
+/// Pedido do menu Extensões: abrir o painel (expandido) já na aba do Fluxogama.
+static EXPANDIR: AtomicBool = AtomicBool::new(false);
+
+pub fn aba_ativa() -> bool {
+    tem_aba() && ABA_ATIVA.load(Ordering::Relaxed)
+}
+
+pub fn mostrar_aba(ativa: bool) {
+    ABA_ATIVA.store(ativa, Ordering::Relaxed);
+}
+
+/// `true` uma vez depois de o menu Extensões pedir a aba: o painel se expande para mostrá-la.
+pub fn pedido_expandir() -> bool {
+    EXPANDIR.swap(false, Ordering::Relaxed)
+}
+
+/// O servidor do plugin: 0 não verificado, 1 ligando, 2 pronto, 3 não ligou.
+static SERVIDOR: AtomicU8 = AtomicU8::new(0);
+
+fn porta_aberta(porta: u16) -> bool {
+    TcpStream::connect_timeout(&SocketAddr::from(([127, 0, 0, 1], porta)), Duration::from_millis(300)).is_ok()
+}
+
+/// Liga a Suíte (sem janela) se o servidor do Fluxogama ainda não responde.
+fn garantir_servidor(ctx: &egui::Context) {
+    if SERVIDOR.compare_exchange(0, 1, Ordering::Relaxed, Ordering::Relaxed).is_err() {
+        return;
+    }
+    let ctx = ctx.clone();
+    std::thread::spawn(move || {
+        let ok = porta_aberta(PORTA_FXG) || ligar_suite(|| porta_aberta(PORTA_FXG));
+        SERVIDOR.store(if ok { 2 } else { 3 }, Ordering::Relaxed);
+        ctx.request_repaint();
+    });
+}
+
+/// Onde o programa deve pôr a página do Fluxogama neste quadro (pontos do egui), e o endereço.
+struct Pedido {
+    quadro: u64,
+    rect: egui::Rect,
+}
+static PEDIDO: Mutex<Option<Pedido>> = Mutex::new(None);
+
+/// O retângulo (em pontos) e o endereço da página, se a aba está à mostra neste quadro e nada do
+/// próprio Illustre (menu, diálogo) está por cima dela. `None`: o programa esconde a página.
+pub fn painel_web(ctx: &egui::Context) -> Option<(egui::Rect, String)> {
+    let p = PEDIDO.lock().unwrap();
+    let p = p.as_ref().filter(|p| p.quadro == ctx.cumulative_frame_nr())?;
+    Some((p.rect, format!("http://127.0.0.1:{PORTA_FXG}/")))
+}
+
+/// O conteúdo da aba: reserva o espaço da página (desenhada pelo programa por cima) e mostra o
+/// andamento enquanto o servidor liga.
+pub fn conteudo_aba(app: &crate::VectorcraftApp, ui: &mut Ui) {
+    let rect = ui.available_rect_before_wrap();
+    ui.allocate_rect(rect, Sense::hover());
+    garantir_servidor(ui.ctx());
+    let t = crate::theme::Tokens::get(ui.ctx());
+    let (msg, pronto) = match SERVIDOR.load(Ordering::Relaxed) {
+        2 => ("Carregando o Fluxogama…", true),
+        3 => ("Não foi possível ligar o Fluxogama. Abra a Suíte Angerô e clique na aba de novo.", false),
+        _ => ("Ligando o Fluxogama…", false),
+    };
+    ui.painter().text(rect.center_top() + vec2(0.0, 40.0), egui::Align2::CENTER_TOP, msg, egui::FontId::proportional(12.5), t.text);
+    if SERVIDOR.load(Ordering::Relaxed) == 3 && ui.input(|i| i.pointer.any_click()) && ui.rect_contains_pointer(rect) {
+        SERVIDOR.store(0, Ordering::Relaxed);
+    }
+    // Um menu, popup ou diálogo do Illustre ficaria escondido atrás da página: ela sai enquanto isso.
+    let coberta = egui::Popup::is_any_open(ui.ctx()) || app.ui.dialog.is_some();
+    if pronto && !coberta {
+        *PEDIDO.lock().unwrap() = Some(Pedido { quadro: ui.ctx().cumulative_frame_nr(), rect });
+    }
 }
 
 /// Largura do botão com texto.
@@ -186,7 +284,18 @@ pub fn botao(ui: &mut Ui, com_texto: bool) {
             }
             Lista::Pronta(itens) => {
                 for ext in itens {
-                    if ext.suportada {
+                    if ext.suportada && ext.id == ID_FLUXOGAMA && tem_aba() {
+                        // Fluxogama: aba do painel da direita, ou a janela separada de antes
+                        if ui.button(&ext.nome).clicked() {
+                            mostrar_aba(true);
+                            EXPANDIR.store(true, Ordering::Relaxed);
+                            ui.close();
+                        }
+                        if ui.button(format!("{} (janela separada)", ext.nome)).clicked() {
+                            abrir(ext.id.clone());
+                            ui.close();
+                        }
+                    } else if ext.suportada {
                         if ui.button(&ext.nome).clicked() {
                             abrir(ext.id.clone());
                             ui.close();

@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  PACOTE: "vectorcraft"
+  PACOTE: "illustre"
   EXE: "illustre"
   ID: "illustre"
   NOME: "Illustre - Angerô"
