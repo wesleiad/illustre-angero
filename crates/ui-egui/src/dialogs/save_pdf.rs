@@ -806,7 +806,7 @@ pub(super) fn warning_rows(ui: &mut egui::Ui, warnings: &[Value]) {
         note(ui, tl!("None."));
     }
     for w in warnings {
-        ui.label(egui::RichText::new(format!("⚠ {}", w.as_str().unwrap_or_default())).color(t.text));
+        ui.label(egui::RichText::new(format!("⚠ {}", crate::i18n::msg(w.as_str().unwrap_or_default()))).color(t.text));
     }
 }
 

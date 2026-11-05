@@ -3775,3 +3775,99 @@ axis	Both	Ambos
 	No extensions installed	Nenhuma extensão instalada
 	(not adapted yet)	(ainda não adaptada)
 	Open extensions folder	Abrir pasta de extensões
+# Angerô (2026-11-05): janela Imprimir e Exportar PDF — seções, listas, marcas e avisos que apareciam em inglês.
+	Marks and Bleed	Marcas e Sangria
+	Marks and Bleeds	Marcas e Sangrias
+	Output	Saída
+	Color Management	Gerenciamento de Cores
+	Summary	Resumo
+	Compression	Compressão
+	Security	Segurança
+	[Default]	[Padrão]
+	[Custom]	[Personalizado]
+	Default Printer	Impressora Padrão
+	PDF File	Arquivo PDF
+	Print presets	Predefinições de impressão
+	Trim marks	Marcas de corte
+	Registration marks	Marcas de registro
+	Color bars	Barras de cores
+	Page information	Informações da página
+mark-style	Roman	Romanas
+mark-style	Japanese	Japonesas
+	Roman	Romano
+	Same As Source	Igual à Origem
+	None (keep transparency)	Nenhum (manter transparência)
+	Simulate prints overprints as Overprint Preview shows them; separations always keep them. A preset flattens transparency before printing (PostScript files always flatten it).	Simular imprime as sobreimpressões como a Visualização de Sobreimpressão as mostra; as separações sempre as mantêm. Um predefinido achata a transparência antes de imprimir (arquivos PostScript sempre a achatam).
+	Perceptual	Perceptivo
+	Relative Colorimetric	Colorimétrico Relativo
+	Absolute Colorimetric	Colorimétrico Absoluto
+	Document profile	Perfil do documento
+	CMYK profile in effect	Perfil CMYK em uso
+	Letter	Carta
+	Legal	Ofício
+	Tabloid	Tabloide
+	Portrait (flipped)	Retrato (invertido)
+	Landscape (flipped)	Paisagem (invertida)
+	Visible & Printable Layers	Camadas Visíveis e Imprimíveis
+	Visible Layers	Camadas Visíveis
+	All Layers	Todas as Camadas
+	Top Left	Superior Esquerdo
+	Top	Superior
+	Top Right	Superior Direito
+	Bottom Left	Inferior Esquerdo
+	Bottom	Inferior
+	Bottom Right	Inferior Direito
+	Do Not Scale	Não Dimensionar
+	Fit to Page	Ajustar à Página
+	Custom Scale	Escala Personalizada
+	Tile Full Pages	Lado a Lado: Páginas Inteiras
+	Tile Imageable Areas	Lado a Lado: Áreas Imprimíveis
+	Composite	Composto
+	Separations	Separações
+	Up (right reading)	Para cima (leitura correta)
+	Down (right reading)	Para baixo (leitura correta)
+	Positive	Positivo
+	Negative	Negativo
+	Subset	Subconjunto
+	Complete	Completo
+	Cyan	Ciano
+	Magenta	Magenta
+	Yellow	Amarelo
+	Simulate	Simular
+	Preserve	Preservar
+	No downsampling	Sem redução de resolução
+	Subsample	Subamostragem
+	Bicubic	Bicúbica
+	Minimum	Mínima
+	Low	Baixa
+	High	Alta
+	Maximum	Máxima
+	Run Length	Run Length (RLE)
+	No conversion	Sem conversão
+	Convert to destination	Converter para o destino
+	Convert to destination (preserve numbers)	Converter para o destino (preservar números)
+	Don't include profiles	Não incluir perfis
+	Include all profiles	Incluir todos os perfis
+	Include destination profile	Incluir perfil de destino
+	Include tagged source profiles	Incluir perfis de origem marcados
+	Low resolution (150 ppi)	Baixa resolução (150 ppi)
+	High resolution	Alta resolução
+	Inserting, deleting and rotating pages	Inserir, excluir e girar páginas
+	Filling in form fields and signing	Preencher campos de formulário e assinar
+	Commenting, filling in form fields and signing	Comentar, preencher campos de formulário e assinar
+	Any except extracting pages	Qualquer uma, exceto extrair páginas
+	Output › Mode	Saída › Modo
+	General › Placement › X	Geral › Posicionamento › X
+	Compression › Color › Above Ppi	Compressão › Cor › Acima de ppi
+	General › Thumbnails	Geral › Miniaturas
+@msg	Artboard {n}	Mesa de Trabalho {n}
+@msg	The art	A arte
+@msg	{what} has no area and was left out	{what} não tem área e ficou de fora
+@msg	{what} with its bleed and marks is larger than the imageable area: part of it doesn't print	{what}, com sangria e marcas, é maior que a área imprimível: uma parte não sai na impressão
+@msg	Print as Bitmap is for composite output: separations print the art as it is	Imprimir como Bitmap vale só para saída composta: as separações imprimem a arte como está
+@msg	a fixed flatness is not written yet: the output device flattens curves	o achatamento fixo ainda não é gravado: o dispositivo de saída achata as curvas
+@msg	ink frequencies and angles are not written as halftone screens yet: the output device's screens apply	frequências e ângulos das tintas ainda não são gravados como retículas: valem as retículas do dispositivo de saída
+@msg	separations separate with a CMYK profile: the RGB printer profile is left out	as separações usam um perfil CMYK: o perfil RGB da impressora fica de fora
+@msg	the document is RGB: separations convert its colours to CMYK with the colour settings	o documento é RGB: as separações convertem as cores para CMYK com as configurações de cor
+@msg	the printer profile converts the colours of PDF output: PostScript prints the document's colours	o perfil da impressora converte as cores da saída PDF: o PostScript imprime as cores do documento
+@msg	transparency is flattened into opaque art and images (PostScript has none): see flattenerPreset	a transparência é achatada em arte e imagens opacas (o PostScript não tem transparência): veja flattenerPreset

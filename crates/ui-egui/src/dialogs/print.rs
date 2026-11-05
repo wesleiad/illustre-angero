@@ -267,7 +267,7 @@ fn preset_rows(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
         // [Default] is ours (translated); the saved presets are names.
         let current = if same { name.as_str() } else { tl!(CUSTOM) };
         picked = super::mixed_dropdown(ui, "print-preset", current, &names, 300.0, |k| k == 0).and_then(|i| names.get(i)).map(|n| n.to_string());
-        let save = ui.add_enabled_ui(!asking, |ui| widgets::flat_button(ui, tl!("Save Preset…"), 96.0)).inner;
+        let save = ui.add_enabled_ui(!asking, |ui| widgets::flat_button_fit(ui, tl!("Save Preset…"), 96.0)).inner;
         ask = save.on_hover_text(tl!("Save these settings as a print preset")).clicked();
     });
     if let Some(n) = picked {
@@ -352,7 +352,7 @@ fn printer_row(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
         }
         let to_file = d.bool("toFile");
         let tip = if setup { tl!("The system's settings of this printer") } else { tl!("No printer settings to open here") };
-        if ui.add_enabled_ui(setup && !to_file, |ui| widgets::flat_button(ui, tl!("Setup…"), 72.0)).inner.on_hover_text(tip).clicked()
+        if ui.add_enabled_ui(setup && !to_file, |ui| widgets::flat_button_fit(ui, tl!("Setup…"), 72.0)).inner.on_hover_text(tip).clicked()
             && let Err(e) = app.run("print.printerSetup", json!({ "printer": d.str("printer") }))
         {
             app.status(e);

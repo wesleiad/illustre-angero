@@ -31,6 +31,14 @@ pub fn paint_icon_button(ui: &mut Ui, resp: Response, icon: &str, tip: &str, sel
     if !tip.is_empty() { resp.on_hover_text(tl!(tip)) } else { resp }
 }
 
+/// Angerô: [`flat_button`] at least `width` wide, wider when the (translated) text needs it, so
+/// longer Portuguese labels aren't cut off.
+pub fn flat_button_fit(ui: &mut Ui, text: &str, width: f32) -> Response {
+    let t = Tokens::get(ui.ctx());
+    let needed = ui.painter().layout_no_wrap(tl!(text).to_string(), egui::FontId::proportional(12.5), t.text_strong).size().x + 16.0;
+    flat_button(ui, text, width.max(needed.ceil()))
+}
+
 /// Small flat text button (Quick Actions style).
 pub fn flat_button(ui: &mut Ui, text: &str, width: f32) -> Response {
     let t = Tokens::get(ui.ctx());
