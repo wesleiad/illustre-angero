@@ -79,6 +79,7 @@ mod system {
 /// registro, sem falar com cada impressora) e a padrão por GetDefaultPrinterW. `None` se o
 /// spooler não responder: aí vale o caminho antigo do craft_print.
 #[cfg(all(windows, not(any(feature = "windows7", target_vendor = "win7"))))]
+#[allow(unsafe_code)] // chamadas Win32 do spooler, como system_fonts/mac_fonts
 mod windows_nativo {
     use vectorcraft_ui_egui::print::Printer;
     use windows::Win32::Graphics::Printing::{EnumPrintersW, GetDefaultPrinterW, PRINTER_ENUM_CONNECTIONS, PRINTER_ENUM_LOCAL, PRINTER_INFO_4W};
